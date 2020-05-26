@@ -5,4 +5,9 @@ export interface IShowFoldersPermissionsWiseProps {
   title: string;
   displayMode: DisplayMode;
   updateProperty: (value: string) => void;
+  iconName: string;
+  noFoldersFoundMessage: string;
+  titleColor: string;
+  backgroundColor: string;
+  iconBackgroundColor: string;
 }

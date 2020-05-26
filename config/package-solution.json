@@ -1,7 +1,7 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
   "solution": {
-    "name": "show-folders-permissions-wise-client-side-solution",
+    "name": "Zogenix My Folders Web Part Solution",
     "id": "11e309e2-282a-4199-9d82-b4a5e881de73",
     "version": "1.0.0.0",
     "includeClientSideAssets": true,
@@ -9,6 +9,6 @@
     "isDomainIsolated": false
   },
   "paths": {
-    "zippedPackage": "solution/show-folders-permissions-wise.sppkg"
+    "zippedPackage": "solution/zogenix-my-folders-web-part-solution.sppkg"
   }
 }
