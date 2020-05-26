@@ -1,0 +1,19 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "show-folders-permissions-wise-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/showFoldersPermissionsWise/ShowFoldersPermissionsWiseWebPart.js",
+          "manifest": "./src/webparts/showFoldersPermissionsWise/ShowFoldersPermissionsWiseWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "ShowFoldersPermissionsWiseWebPartStrings": "lib/webparts/showFoldersPermissionsWise/loc/{locale}.js",
+    "ControlStrings": "node_modules/@pnp/spfx-controls-react/lib/loc/{locale}.js"
+  }
+}
