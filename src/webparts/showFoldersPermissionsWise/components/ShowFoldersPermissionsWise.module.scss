@@ -4,30 +4,6 @@
 
 :global {
   .showFoldersPermissionsWiseWrapper {
-    .container {
-      max-width: 530px;
-      margin: 0px auto;
-      overflow-y: auto;
-      box-shadow: 0 2px 4px 0 rgba(238, 226, 226, 0.2), 0 25px 50px 0 rgba(0, 0, 0, 0.1);
-    }
-
-    .row {
-      @include ms-Grid-row;
-      background-color: $ms-color-themeDark;
-    }
-
-    .column {
-      @include ms-Grid-col;
-      @include ms-lg10;
-      @include ms-xl8;
-      @include ms-xlPush2;
-      @include ms-lgPush1;
-    }
-
-    .title {
-      @include ms-font-xl;
-    }
-
     .subTitle {
       display: inline-block;
       padding-bottom: 10px;
@@ -58,9 +34,7 @@
     }
 
     .showFoldersData {
-      overflow-y: auto;
       overflow-x: hidden;
-      max-height: 400px;
     }
 
     .custom-row {

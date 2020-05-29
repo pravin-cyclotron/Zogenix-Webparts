@@ -3,7 +3,7 @@ import "@pnp/polyfill-ie11";
 import './ShowFoldersPermissionsWise.module.scss';
 import { IShowFoldersPermissionsWiseProps } from './IShowFoldersPermissionsWiseProps';
 import { IFoldersState, IFolderItem } from "./IShowFoldersState";
-import { sp } from "@pnp/sp/presets/all";
+import { sp, PermissionKind } from "@pnp/sp/presets/all";
 import { Shimmer } from 'office-ui-fabric-react/lib/Shimmer';
 import { IDocumentLibraryInformation } from "@pnp/sp/sites";
 import { WebPartTitle } from '@pnp/spfx-controls-react/lib/WebPartTitle';
@@ -16,11 +16,11 @@ export default class ShowFoldersPermissionsWise extends React.Component<IShowFol
 
     this.state = {
       foldersData: [],
-      isLoaded: false,
-      foldersHTML: null
+      isLoaded: false
     };
   }
 
+  //This method gets called in the page load.
   public componentDidMount() {
     try {
       this.getAllLibrariesFoldersData();
@@ -33,6 +33,7 @@ export default class ShowFoldersPermissionsWise extends React.Component<IShowFol
     }
   }
 
+  //This method fetches all the accessible folders across all libraries present in a site.
   private async getAllLibrariesFoldersData() {
 
     try {
@@ -41,32 +42,55 @@ export default class ShowFoldersPermissionsWise extends React.Component<IShowFol
 
       const docLibs: any = await sp.site.getDocumentLibraries(this.props.siteURL);
 
-      //we got the array of document library information
+      //we got the array of document libraries
       docLibs.results.forEach((docLib: IDocumentLibraryInformation) => {
-        // parse each library to fetch folders
 
-        let foldersDataPromise = this.getFoldersData(docLib);
+        //Check if current user has library level permissions
+        let hasLibraryPermissionsPromise = this.checkUserLibraryPermissions(docLib);
 
-        foldersDataPromise.then((folders: any[]) => {
+        hasLibraryPermissionsPromise.then((hasLibraryPermissions: boolean) => {
 
-          folders.forEach((folder) => {
+          //If current user has library level permissions then show the document library name directly
+          if (hasLibraryPermissions == true) {
+
             let folderItem: IFolderItem = {
-              DocumentLibrary: docLib.Title,
-              FolderName: folder.FileLeafRef,
-              FolderLink: folder.FileRef
+              FolderName: docLib.Title,
+              FolderLink: docLib.ServerRelativeUrl,
             };
+            folderItems.push(folderItem);
 
-            let result: any = folderItems.filter(fItem => folder.FileRef.indexOf(fItem.FolderLink) > -1);
+            //Call to sort the library and folder items and set state
+            this.sortAndSetState(folderItems);
+          }
+          else {
 
-            if (result.length == 0)
-              folderItems.push(folderItem);
+            //otherwise parse each library to fetch folders to show each accessible folders.
+            let foldersDataPromise = this.getFoldersData(docLib);
 
-          });
+            foldersDataPromise.then((folders: any[]) => {
 
-          this.setState({
-            foldersData: folderItems,
-            isLoaded: true
-          });
+              folders.forEach((folder) => {
+                let folderItem: IFolderItem = {
+                  FolderName: folder.FileLeafRef,
+                  FolderLink: folder.FileRef
+                };
+
+                let result: any = folderItems.filter(fItem =>
+                  folder.FileRef.indexOf(fItem.FolderLink) > -1 &&
+                  folder.FileLeafRef.indexOf(fItem.FolderName) == -1
+
+                );
+
+                if (result.length == 0)
+                  folderItems.push(folderItem);
+
+              });
+
+              //Call to sort the library and folder items and set state
+              this.sortAndSetState(folderItems);
+            });
+          }
+
         });
       });
     }
@@ -79,6 +103,23 @@ export default class ShowFoldersPermissionsWise extends React.Component<IShowFol
 
   }
 
+  //This method sorts the library & folder items and updates the react state.
+  private sortAndSetState(folderItems: IFolderItem[]) {
+
+    folderItems.sort((a, b) => {
+      if (a.FolderName < b.FolderName) { return -1; }
+      if (a.FolderName > b.FolderName) { return 1; }
+      return 0;
+    });
+
+    this.setState({
+      foldersData: folderItems,
+      isLoaded: true
+    });
+
+  }
+
+  //This method gets all the folders available in the passed document library.
   private async getFoldersData(docLib: any) {
 
     let folders: any[] = await sp.web.lists.getByTitle(docLib.Title)
@@ -91,6 +132,15 @@ export default class ShowFoldersPermissionsWise extends React.Component<IShowFol
 
   }
 
+  //Check if current user has permissions and return the promise for the same.
+  private async checkUserLibraryPermissions(docLib: any) {
+
+    const hasLibraryPermissionsPromise = await sp.web.lists.getByTitle(docLib.Title).currentUserHasPermissions(PermissionKind.ViewListItems);
+    return hasLibraryPermissionsPromise;
+
+  }
+
+  //Creates the html JSX based on the folders data loaded from SharePoint libraries within a site.
   public createJSXForFoldersAndLibrary(): any {
 
     let linkIconName = this.props.iconName !== null && this.props.iconName !== "" && this.props.iconName !== undefined ? this.props.iconName : "Globe";
@@ -104,7 +154,7 @@ export default class ShowFoldersPermissionsWise extends React.Component<IShowFol
                 <Icon iconName={linkIconName} ariaLabel={linkIconName}></Icon>
               </div>
               <div className="folderLink">
-                <a href={window.location.origin + folderItem.FolderLink} className="anchorTag" target="_blank" data-interception="off">
+                <a href={window.location.origin + folderItem.FolderLink} className="anchorTag">
                   {folderItem.FolderName}
                 </a>
               </div>
@@ -118,11 +168,19 @@ export default class ShowFoldersPermissionsWise extends React.Component<IShowFol
 
   }
 
-
   public componentDidUpdate() {
-    this._colorConfig();
+    try {
+      this._colorConfig();
+    }
+    catch (error) {
+      console.log(error);
+      this.setState({
+        isLoaded: true
+      });
+    }
   }
 
+  //Apply the selected colors to the UI elements including web part title, background and icon.
   private _colorConfig() {
     let webParttitleColor: any = document.querySelectorAll(".webPartTitleSection div[class^='webPartTitle_']")[0];
     if (webParttitleColor !== undefined && webParttitleColor !== null)
@@ -145,6 +203,7 @@ export default class ShowFoldersPermissionsWise extends React.Component<IShowFol
 
   }
 
+  //Show shimmers till the data gets loaded on the screen
   public getLoadingShimmers(): any {
 
     return (<div>
@@ -161,6 +220,7 @@ export default class ShowFoldersPermissionsWise extends React.Component<IShowFol
 
   }
 
+  //Rendering the html
   public render(): React.ReactElement<IShowFoldersPermissionsWiseProps> {
 
     const webpartTitle = <WebPartTitle displayMode={this.props.displayMode}
