@@ -1,4 +1,5 @@
 import * as React from 'react';
+import "@pnp/polyfill-ie11";
 import './ShowFoldersPermissionsWise.module.scss';
 import { IShowFoldersPermissionsWiseProps } from './IShowFoldersPermissionsWiseProps';
 import { IFoldersState, IFolderItem } from "./IShowFoldersState";

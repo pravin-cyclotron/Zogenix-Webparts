@@ -29,10 +29,18 @@
     }
 
     .subTitle {
-      @include ms-font-l;
       display: inline-block;
       padding-bottom: 10px;
       margin-top: 10px;
+      font-weight: 300;
+    }
+
+    div[class^="webPartTitle_"] {
+      font-weight: 300;
+      font-size: 19px !important;
+      color: #205990;
+      text-underline-position: inherit !important;
+      text-decoration: none !important;
     }
 
     .libraryName {
@@ -62,7 +70,7 @@
     .libTitle {
       margin-bottom: 7px;
       left: 0.5%;
-      font-size: 17px;
+      font-size: 16px;
     }
 
     .libTitle:hover {
@@ -85,6 +93,7 @@
 
     .webPartTitleSection {
       padding: 10px 12px;
+      height: 35px;
     }
   }
 }

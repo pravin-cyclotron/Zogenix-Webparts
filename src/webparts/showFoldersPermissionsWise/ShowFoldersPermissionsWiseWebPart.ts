@@ -1,4 +1,5 @@
 import * as React from 'react';
+import "@pnp/polyfill-ie11";
 import * as ReactDom from 'react-dom';
 import { Version } from '@microsoft/sp-core-library';
 import {
@@ -29,6 +30,7 @@ export interface IShowFoldersPermissionsWiseWebPartProps {
 export default class ShowFoldersPermissionsWiseWebPart extends BaseClientSideWebPart<IShowFoldersPermissionsWiseWebPartProps> {
 
   public onInit(): Promise<void> {
+
     return super.onInit().then(_ => {
 
       sp.setup({
