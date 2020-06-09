@@ -45,53 +45,56 @@ export default class ShowFoldersPermissionsWise extends React.Component<IShowFol
       //we got the array of document libraries
       docLibs.results.forEach((docLib: IDocumentLibraryInformation) => {
 
-        //Check if current user has library level permissions
-        let hasLibraryPermissionsPromise = this.checkUserLibraryPermissions(docLib);
+        //Do not show the Shared Documents library in the web part.
+        if (docLib.ServerRelativeUrl.split("/").pop() !== "Shared Documents") {
+          //Check if current user has library level permissions
+          let hasLibraryPermissionsPromise = this.checkUserLibraryPermissions(docLib);
 
-        hasLibraryPermissionsPromise.then((hasLibraryPermissions: boolean) => {
+          hasLibraryPermissionsPromise.then((hasLibraryPermissions: boolean) => {
 
-          //If current user has library level permissions then show the document library name directly
-          if (hasLibraryPermissions == true) {
+            //If current user has library level permissions then show the document library name directly
+            if (hasLibraryPermissions == true) {
 
-            let folderItem: IFolderItem = {
-              FolderName: docLib.Title,
-              FolderLink: docLib.ServerRelativeUrl,
-            };
-            folderItems.push(folderItem);
-
-            //Call to sort the library and folder items and set state
-            this.sortAndSetState(folderItems);
-          }
-          else {
-
-            //otherwise parse each library to fetch folders to show each accessible folders.
-            let foldersDataPromise = this.getFoldersData(docLib);
-
-            foldersDataPromise.then((folders: any[]) => {
-
-              folders.forEach((folder) => {
-                let folderItem: IFolderItem = {
-                  FolderName: folder.FileLeafRef,
-                  FolderLink: folder.FileRef
-                };
-
-                let result: any = folderItems.filter(fItem =>
-                  folder.FileRef.indexOf(fItem.FolderLink) > -1 &&
-                  folder.FileLeafRef.indexOf(fItem.FolderName) == -1
-
-                );
-
-                if (result.length == 0)
-                  folderItems.push(folderItem);
-
-              });
+              let folderItem: IFolderItem = {
+                FolderName: docLib.Title,
+                FolderLink: docLib.ServerRelativeUrl,
+              };
+              folderItems.push(folderItem);
 
               //Call to sort the library and folder items and set state
               this.sortAndSetState(folderItems);
-            });
-          }
+            }
+            else {
 
-        });
+              //otherwise parse each library to fetch folders to show each accessible folders.
+              let foldersDataPromise = this.getFoldersData(docLib);
+
+              foldersDataPromise.then((folders: any[]) => {
+
+                folders.forEach((folder) => {
+                  let folderItem: IFolderItem = {
+                    FolderName: folder.FileLeafRef,
+                    FolderLink: folder.FileRef
+                  };
+
+                  let result: any = folderItems.filter(fItem =>
+                    folder.FileRef.indexOf(fItem.FolderLink) > -1 &&
+                    folder.FileLeafRef.indexOf(fItem.FolderName) == -1
+
+                  );
+
+                  if (result.length == 0)
+                    folderItems.push(folderItem);
+
+                });
+
+                //Call to sort the library and folder items and set state
+                this.sortAndSetState(folderItems);
+              });
+            }
+
+          });
+        }
       });
     }
     catch (error) {
