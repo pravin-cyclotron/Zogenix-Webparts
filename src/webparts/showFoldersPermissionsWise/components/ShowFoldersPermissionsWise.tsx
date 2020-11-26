@@ -69,17 +69,24 @@ export default class ShowFoldersPermissionsWise extends React.Component<IShowFol
               //otherwise parse each library to fetch folders to show each accessible folders.
               let foldersDataPromise = this.getFoldersData(docLib);
 
-              foldersDataPromise.then((folders: any[]) => {
+              foldersDataPromise.then((folders: any) => {
 
-                folders.forEach((folder) => {
+                //Get only folders from the folder results.
+                folders.results = folders.results.filter(folder =>
+                  folder.FSObjType === 1
+                );
+
+                folders.results.forEach((folder: any) => {
+
                   let folderItem: IFolderItem = {
                     FolderName: folder.FileLeafRef,
                     FolderLink: folder.FileRef
                   };
 
+                  //This filtering logic is for Showing only top level folders rather than showing all sub folders present in it.
                   let result: any = folderItems.filter(fItem =>
-                    folder.FileRef.indexOf(fItem.FolderLink) > -1 &&
-                    folder.FileLeafRef.indexOf(fItem.FolderName) == -1
+                    folderItem.FolderLink.indexOf(fItem.FolderLink) > -1 &&
+                    folderItem.FolderName.indexOf(fItem.FolderName) == -1
 
                   );
 
@@ -90,6 +97,40 @@ export default class ShowFoldersPermissionsWise extends React.Component<IShowFol
 
                 //Call to sort the library and folder items and set state
                 this.sortAndSetState(folderItems);
+
+                //Get next set of elements. This is to avoid the error of list threshold limit exceeding
+                //and to fetch items partially like 499 items at a time.
+                folders.getNext().then((folders: any) => {
+
+                  if (folders) {
+
+                    //Get only folders from the folder results.
+                    folders.results = folders.results.filter(folder =>
+                      folder.FSObjType === 1
+                    );
+
+                    folders.results.forEach((folder: any) => {
+                      let folderItem: IFolderItem = {
+                        FolderName: folder.FileLeafRef,
+                        FolderLink: folder.FileRef
+                      };
+
+                      let result: any = folderItems.filter(fItem =>
+                        folderItem.FolderLink.indexOf(fItem.FolderLink) > -1 &&
+                        folderItem.FolderName.indexOf(fItem.FolderName) == -1
+
+                      );
+
+                      if (result.length == 0)
+                        folderItems.push(folderItem);
+
+                    });
+
+                    //Call to sort the library and folder items and set state
+                    this.sortAndSetState(folderItems);
+                  }
+                });
+
               });
             }
 
@@ -125,14 +166,16 @@ export default class ShowFoldersPermissionsWise extends React.Component<IShowFol
   //This method gets all the folders available in the passed document library.
   private async getFoldersData(docLib: any) {
 
-    let folders: any[] = await sp.web.lists.getByTitle(docLib.Title)
+    //Removed the filter of Content Type/FSObjType as the same is causing problem for fetching library items having more than 5000 items.
+    //We cannot use filtering on library items having more than 500 items(folders/files)
+    let folders: any = await sp.web.lists.getByTitle(docLib.Title)
       .items
-      .filter('FSObjType eq 1')
-      .select('FileLeafRef', 'FileRef')
-      .get();
+      //.filter('ContentType eq \'Folder\'')
+      .select('FileLeafRef', 'FileRef', 'FSObjType')
+      .top(499)
+      .getPaged();
 
     return folders;
-
   }
 
   //Check if current user has permissions and return the promise for the same.
